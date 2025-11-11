@@ -91,6 +91,7 @@ export DATABRICKS_TOKEN="<pat>"
 
 ## Structure
 
+```
 AIR-BOLTIC-ANALYTICS/
 ├─ .github/workflows/       # CI/CD workflows
 ├─ assets/
@@ -127,6 +128,8 @@ AIR-BOLTIC-ANALYTICS/
 │
 ├─ .gitignore
 └─ README.md
+
+```
 --------------------------------------------------------------------------------------------------------------------------------
 ## Answering the Business Questions
 
