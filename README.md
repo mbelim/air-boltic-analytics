@@ -1,3 +1,4 @@
+# Part 1
 # Air Boltic 
 
 This repository contains the dbt transformation layer for the Air Boltic analytics platform. It is designed to be reliable, scalable, and maintainable, built on a modern Lakehouse architecture.
@@ -159,3 +160,68 @@ This data model is designed to directly answer the key questions from the case s
 * **Implement a Full CI/CD Pipeline**: I would configure a GitHub Action to run dbt build and dbt test on every pull request. This is essential for automating data quality checks and ensuring that no bad code is merged into production.
 * **Develop dashboard in Looker**: The final step is to build the semantic model in Looker. I would write the materialized views answering business questions and addressing KPIs.
 * **Integrate Automated Alerting**: I would configure our orchestration tool (dbt Cloud or Airflow) to send real-time alerts to Slack or email on any dbt test failure.
+
+--------------------------------------------------------------------------------
+# Part 2
+
+* Part 2 – CI/CD for Evolving Air Boltic’s Data Model
+* In an ideal setup with unlimited resources, I’d treat data model changes the same way large-scale software teams handle application; code—automated, version-controlled, and well-tested before anything hits production.
+
+## Ideal State (No Resource Limits)
+
+### Environments
+- **Development:** Individual sandboxes in Databricks or DBT Cloud where engineers/analyts test logic using sample or anonymized datasets.  
+- **Staging/UAT:** Mirrors production closely. Used for integration testing, schema validation, and QA checks before release.  
+- **Production:** Fully automated deployments only. Code changes move here through CI/CD pipelines after validation—no direct manual scripts or hotfixes.
+
+### Process
+1. **Version Control Discipline**  
+   - Everything lives in GitHub: dbt models, SQL transformations, orchestration scripts.  
+   - Each change starts from a feature branch and goes through a pull request linked to a Jira ticket.  
+
+2. **Automated CI/CD Workflows**  
+   - CI runs on every pull request using GitHub Actions.  
+   - Tasks include:
+     - dbt `run` and `test` on a subset of staging data  
+     - Schema and lineage diff validation  
+     - Data quality checks using dbt-expectations or Great Expectations  
+     - Performance validation (query cost and runtime reviews)
+
+3. **Review & Approval**  
+   - Peer code reviews to ensure logic accuracy and maintainability.  
+   - Business reviews by analytics stakeholders to ensure correct metric definitions and naming.  
+
+4. **Monitoring & Observability**  
+   - Automated alerts for data freshness, drift, and schema changes.    
+   - Logging and alerts feed into Slack or alerting systems for visibility.
+
+---
+
+## Realistic Approach (When Resources Are Limited)
+
+Many data teams start with small-scale, manual workflows and evolve gradually.
+
+### Low-Effort, Short-Term Steps
+- Use Git for versioning dbt and SQL scripts, even if merges are reviewed manually.  
+- Add dbt’s built-in tests (`unique`, `not_null`, `relationships`,`row_count`) as gates.  
+- Maintain a shared staging environment for testing.  
+- Schedule deployments during non-peak hours instead of manual ad-hoc runs.  
+
+### High-Effort, Long-Term Investments
+- Implement true environment isolation across dev/stage/prod in Databricks.  
+- Introduce automated data validation frameworks (e.g using Great Expectations package).  
+
+---
+
+## Practical Experience Reflection
+
+For example, at my previous company, our data team used to run dbt models directly in production to save time. It worked okay at first when there were only a few dashboards, but as more teams started relying on those models, small mistakes caused big issues, like broken dashboards, wrong KPIs etc.
+
+To solve this, we introduced a few basic practices:
+- All dbt and SQL code had to go through Git and a pull request (no more hot fixes in production).  
+- We set up a single staging environment to test changes before deployment.  
+- Every release was tagged in Git, so we could roll back easily if something went wrong.
+
+Even these simple steps made a huge difference. Dashboard breakages dropped sharply, and updating models became safer and easier.
+
+The key takeaway: start with discipline and lightweight processes. You don’t need fancy tools right away.
