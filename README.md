@@ -152,3 +152,10 @@ This data model is designed to directly answer the key questions from the case s
     * **Metric:** `COUNT(DISTINCT customer_key)` from `fct_orders`.
     * **Time Dimension:** Group by `dim_date.date_day` (for DAU) or `dim_date.month` (for MAU).
     * **Caveat:** This currently tracks *Transacting Active Users* and relies on a proxied `order_date`.
+
+
+## If I Had More Time
+
+* **Implement a Full CI/CD Pipeline**: I would configure a GitHub Action to run dbt build and dbt test on every pull request. This is essential for automating data quality checks and ensuring that no bad code is merged into production.
+* **Develop dashboard in Looker**: The final step is to build the semantic model in Looker. I would write the materialized views answering business questions and addressing KPIs.
+* **Integrate Automated Alerting**: I would configure our orchestration tool (dbt Cloud or Airflow) to send real-time alerts to Slack or email on any dbt test failure.
