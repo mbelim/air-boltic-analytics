@@ -1,0 +1,23 @@
+name: "air_boltic"
+version: "1.0.0"
+config-version: 2
+
+profile: "air_boltic"
+
+models:
+  air_boltic:
+    +materialized: table
+    staging:
+      +materialized: view
+    dimensions:
+      +materialized: table
+    facts:
+      +materialized: table
+    shared:
+      +materialized: table
+
+seeds:
+  air_boltic:
+    +quote_columns: false
+    +schema: raw
+    +delimiter: ","

@@ -1,0 +1,100 @@
+version: 2
+
+sources:
+  - name: raw_air_boltic
+    description: "Raw data landed in S3 and registered in Unity Catalog"
+    catalog: raw_catalog
+    schema: raw_air_boltic
+    tags: ["source_data_s3", "raw_air_boltic"]
+
+    # Global freshness check for all tables in this source
+    freshness:
+      warn_after: {count: 12, period: hour}
+      error_after: {count: 24, period: hour}
+
+    tables:
+      - name: customer
+        loaded_at_field: _loaded_at
+        columns:
+          - name: customer_id
+            tests:
+              - not_null
+              - incremental_unique:
+                  timestamp_column: _loaded_at
+          - name: email
+            tests:
+              - not_null
+
+      - name: customer_group
+        loaded_at_field: _loaded_at
+        columns:
+          - name: customer_group_id
+            tests:
+              - not_null
+              - incremental_unique:
+                  timestamp_column: _loaded_at
+          - name: customer_group_type
+            tests:
+              - accepted_values:
+                  values: ['Company', 'Private Group', 'Organisation']
+
+      - name: aeroplan
+        loaded_at_field: _loaded_at
+        columns:
+          - name: airplane_id
+            tests:
+              - not_null
+              - incremental_unique:
+                  timestamp_column: _loaded_at
+      
+      - name: trip
+        loaded_at_field: _loaded_at
+        columns:
+          - name: tip_id
+            tests:
+              - not_null
+              - incremental_unique:
+                  timestamp_column: _loaded_at
+          - name: airplane_id
+            tests:
+              - not_null
+              - incremental_relationships:
+                  timestamp_column: _loaded_at
+                  to: source('raw_air_boltic', 'aeroplan')
+                  field: airplane_id
+
+      - name: order
+        loaded_at_field: _loaded_at
+        tests:
+          # Row count anomaly test (from dbt-expectations)
+          # Fails if 0 rows are loaded (broken pipe) or 5x the daily avg (duplication)
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              min_value: 1
+              group_by: [cast(_loaded_at as date)]
+              # lookback_days: 14 # for calculating the historical average daily row count
+              # anomaly_direction: 'both' # can be 'increase', 'decrease' or 'both'
+              # anomaly_threshold: 5  
+        columns:
+          - name: order_id
+            tests:
+              - not_null
+              - incremental_unique:
+                  timestamp_column: _loaded_at
+          - name: status
+            tests:
+              - accepted_values:
+                  values: ['Finished','Booked', 'Cancelled']
+          - name: customer_id
+            tests:
+              - not_null
+              - incremental_relationships:
+                  timestamp_column: _loaded_at
+                  to: source('raw_air_boltic', 'customer')
+                  field: _loaded_at
+          - name: trip_id
+            tests:
+              - not_null
+              - incremental_relationships:
+                  timestamp_column: _loaded_at
+                  to: source('raw_air_boltic', 'trip')
+                  field: trip_id

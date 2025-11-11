@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: "One row per customer. Enriched with customer group data."
+    columns:
+      - name: customer_key
+        description: "The surrogate primary key for the customer."
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "The natural key from the source system."
+        tests:
+          - unique
+          - not_null
+      - name: customer_type
+        description: "Business-friendly category: Individual, Company, etc."
+
+  - name: dim_aeroplane
+    description: "One row per aeroplane. Enriched with model specs."
+    columns:
+      - name: aeroplane_key
+        description: "The surrogate primary key for the aeroplane."
+        tests:
+          - unique
+          - not_null
+      - name: plane_size_category
+        description: "Business-friendly category: Private Jet, Small, Medium, Large."
+  
+  - name: dim_location
+    description: "One row per unique city. Awaiting enrichment."
+    columns:
+      - name: location_key
+        description: "The surrogate primary key for the location."
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_trip
+    description: "One row per trip. Acts as a 'glue' dimension."
+    columns:
+      - name: trip_key
+        description: "The surrogate primary key for the trip."
+        tests:
+          - unique
+          - not_null
+      - name: trip_distance_category
+        description: "Business-friendly category: Short, Medium, Long Haul."

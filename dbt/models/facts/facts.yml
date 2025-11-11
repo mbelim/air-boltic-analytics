@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: "Core fact table for Air Boltic. Grain is one row per booked seat. Enriched with business-friendly categories."
+    
+    columns:
+      - name: order_id
+        description: "The natural key for the order, used as the unique key."
+        tests:
+          # Check for uniqueness only on new rows
+          - incremental_unique:
+              timestamp_column: loaded_at
+              time_window_hours: 72 # Use a 3-day window
+          # Check for nulls only on new rows
+          - incremental_not_null:
+              timestamp_column: loaded_at
+              time_window_hours: 72
+
+      - name: trip_key
+        description: "The surrogate foreign key to dim_trip."
+        tests:
+          # A foreign key cannot be null
+          - incremental_not_null:
+              timestamp_column: loaded_at
+              time_window_hours: 72
+          # We don't test relationships here; we already did it
+          # at the source. Doing it here would be an expensive join.
+
+      - name: customer_key
+        description: "The surrogate foreign key to dim_customer."
+        tests:
+          - incremental_not_null:
+              timestamp_column: loaded_at
+              time_window_hours: 72
+
+      - name: order_date
+        description: "The date of the order (proxied from trip start, assumed)."
+        tests:
+          - incremental_not_null:
+              timestamp_column: loaded_at
+              time_window_hours: 72
+
+      - name: price_eur
+        description: "The price paid for the seat."
+        tests:
+          # dbt_expectations tests can be made incremental using the 'where' clause
+          - dbt_expectations.expect_column_values_to_be_positive:
+              where: _loaded_at >= current_timestamp() - interval '72 hours'
