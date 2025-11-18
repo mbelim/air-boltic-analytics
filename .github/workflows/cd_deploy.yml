@@ -1,0 +1,30 @@
+name: CD - Deploy Code
+
+# Trigger when code is successfully merged to main
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy_artifacts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # ---------------------------------------------------------
+      # STEP 1: DEPLOY TO PRODUCTION STORAGE
+      # We are NOT running dbt. We are just moving the SQL files
+      # to the S3 bucket that Airflow reads from.
+      # ---------------------------------------------------------
+      - name: Sync dbt project to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --delete # Remove deleted files
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_PROD_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SOURCE_DIR: 'dbt/'
+          DEST_DIR: 'dbt_production/'

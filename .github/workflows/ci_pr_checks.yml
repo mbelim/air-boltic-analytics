@@ -1,0 +1,45 @@
+name: CI - Check logic
+
+# Trigger only on PUll Request against main
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify_logic:
+    runs-on: ubuntu-latest
+
+# Set environment variables for dbt to connect to Databricks
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Python & dbt
+        run: 
+          pip install dbt-databricks
+          dbt deps --project-dir dbt/
+
+      # ---------------------------------------------------------
+      # STEP 1: THE LOGIC CHECK
+      # We run 'dbt build'. This runs Models AND Tests (Unique/NotNull).
+      # We DO NOT run 'dbt source freshness'.
+      # ---------------------------------------------------------
+      - name: Run Models and Tests
+        # In a real setup, you'd add '--select state:modified+' here
+        run: dbt build --project-dir dbt/ --target dev
+
+      - name: Install Python dependencies
+        run: pip install dbt-databricks sqlfluff # <--- Install Linter
+
+      # ---------------------------------------------------------
+      # NEW STEP: RUN LINTER
+      # ---------------------------------------------------------
+      - name: Lint SQL files
+        # This checks all SQL files in your dbt/models folder
+        run: sqlfluff lint dbt/models --dialect databricks
